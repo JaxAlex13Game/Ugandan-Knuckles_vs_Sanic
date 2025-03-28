@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ugandan Knuckles vs Sanic - 3D Battle</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+        }
+        canvas { 
+            display: block; 
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background-color: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid gold;
+            text-shadow: 2px 2px 4px #000;
+        }
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            background-color: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            border: 3px solid red;
+            text-shadow: 2px 2px 4px #000;
+            width: 300px;
+        }
+        #character-select {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            background-color: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 3px solid gold;
+            text-shadow: 2px 2px 4px #000;
+            width: 400px;
+        }
+        button {
+            background-color: #FF4500;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 18px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #FF6347;
+            transform: scale(1.05);
+        }
+        .character-option {
+            display: inline-block;
+            margin: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .character-option:hover {
+            transform: scale(1.1);
+        }
+        .character-option img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 3px solid transparent;
+        }
+        .character-option.selected img {
+            border-color: gold;
+        }
+        h1, h2 {
+            color: #FFD700;
+        }
+        #knuckles-health, #sanic-health {
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        #knuckles-health-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(to right, #8B0000, #FF0000);
+            transition: width 0.3s;
+        }
+        #sanic-health-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(to right, #00008B, #1E90FF);
+            transition: width 0.3s;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+        }
+        .key {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <div id="character-select">
+        <h1>Choose Your Character</h1>
+        <div>
+            <div class="character-option" onclick="selectCharacter('red')">
+                <img src="https://i.pinimg.com/originals/b4/7e/09/b47e090978818836505879e1efc0b936.gif" alt="Red Knuckles">
+                <p>Ugandan Knuckles</p>
+            </div>
+            <div class="character-option" onclick="selectCharacter('blue')">
+                <img src="https://tse2.mm.bing.net/th?id=OIP.KBVkDNfFDsfoGVrpQnNkeAHaF3&pid=Api&P=0&h=220" alt="Blue Knuckles">
+                <p>Ugandan Knuckles(Blue)</p>
+            </div>
+            <div class="character-option" onclick="selectCharacter('green')">
+                <img src="https://i.kym-cdn.com/photos/images/newsfeed/001/527/813/b10.png" alt="Green Knuckles">
+                <p>Ugandan Knuckles(Green)</p>
+            </div>
+        </div>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <div id="ui" style="display:none;">
+        <h1 id="game-title">Ugandan Knuckles vs Sanic</h1>
+        <p>Use WASD or Arrow Keys to move | SPACE to attack</p>
+        
+        <div class="controls">
+            <div>
+                <div class="key">W/↑</div>
+                <div class="key">A/←</div>
+                <div class="key">S/↓</div>
+                <div class="key">D/→</div>
+            </div>
+            <div class="key">SPACE</div>
+        </div>
+        
+        <p>Time: <span id="time">0</span>s</p>
+        <p>Score: <span id="score">0</span></p>
+        
+        <h3>Player Health</h3>
+        <div id="knuckles-health">
+            <div id="knuckles-health-bar"></div>
+        </div>
+        
+        <h3>Sanic Health</h3>
+        <div id="sanic-health">
+            <div id="sanic-health-bar"></div>
+        </div>
+    </div>
+    
+    <div id="game-over">
+        <h2>GAME OVER!</h2>
+        <p>You defeated Sanic <span id="final-score">0</span> times!</p>
+        <p>Best time: <span id="best-time">0</span>s</p>
+        <button onclick="resetGame()">PLAY AGAIN</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Game variables
+        let score = 0;
+        let startTime = Date.now();
+        let gameTime = 0;
+        let bestTime = 0;
+        let gameActive = true;
+        let knucklesHealth = 100;
+        let sanicHealth = 100;
+        let isAttacking = false;
+        let attackCooldown = false;
+        let selectedCharacter = 'red';
+        let playerColor = 0xFF0000; // Default red
+        
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x4682B4);
+        
+        // Camera
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 15, 25);
+        camera.lookAt(0, 0, 0);
+        
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+        
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 20, 10);
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+        
+        // Ground
+        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const groundTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
+        groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
+        groundTexture.repeat.set(10, 10);
+        const groundMaterial = new THREE.MeshStandardMaterial({ 
+            map: groundTexture,
+            side: THREE.DoubleSide
+        });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+        
+        // Character models
+        let player, sanic;
+        let playerParts = {};
+        let sanicParts = {};
+        
+        function createPlayer(color) {
+            // Body
+            const bodyGeometry = new THREE.CylinderGeometry(0.8, 1, 1.5, 16);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ 
+                color: color,
+                roughness: 0.7,
+                metalness: 0.1
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1;
+            body.castShadow = true;
+            
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.9, 32, 32);
+            headGeometry.scale(1, 1.1, 1);
+            const headMaterial = new THREE.MeshStandardMaterial({ 
+                color: color,
+                roughness: 0.7
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.1;
+            head.castShadow = true;
+            
+            // Eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+            const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.35, 2.2, 0.8);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.35, 2.2, 0.8);
+            
+            // Pupils
+            const pupilGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+            const pupilMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+            
+            const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            leftPupil.position.set(-0.35, 2.2, 0.95);
+            
+            const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            rightPupil.position.set(0.35, 2.2, 0.95);
+            
+            // Mouth
+            const mouthGeometry = new THREE.TorusGeometry(0.2, 0.05, 8, 16, Math.PI);
+            const mouthMaterial = new THREE.MeshStandardMaterial({ color: 0x8B0000 });
+            const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+            mouth.position.set(0, 1.9, 0.8);
+            mouth.rotation.x = Math.PI / 2;
+            
+            // Spikes
+            const spikeGeometry = new THREE.ConeGeometry(0.15, 0.5, 8);
+            const spikeMaterial = new THREE.MeshStandardMaterial({ color: color });
+            const spikes = new THREE.Group();
+            for (let i = 0; i < 6; i++) {
+                const spike = new THREE.Mesh(spikeGeometry, spikeMaterial);
+                spike.position.set(0, 2.5, 0);
+                spike.rotation.x = -Math.PI / 4;
+                spike.rotation.z = (i / 6) * Math.PI * 2;
+                spikes.add(spike);
+            }
+            
+            // Arms
+            const armGeometry = new THREE.CylinderGeometry(0.2, 0.3, 1.2, 8);
+            const leftArm = new THREE.Mesh(armGeometry, bodyMaterial);
+            leftArm.position.set(-1, 1.5, 0);
+            leftArm.rotation.z = Math.PI / 4;
+            
+            const rightArm = new THREE.Mesh(armGeometry, bodyMaterial);
+            rightArm.position.set(1, 1.5, 0);
+            rightArm.rotation.z = -Math.PI / 4;
+            
+            // Hands
+            const handGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+            const leftHand = new THREE.Mesh(handGeometry, bodyMaterial);
+            leftHand.position.set(-1.5, 1.2, 0);
+            
+            const rightHand = new THREE.Mesh(handGeometry, bodyMaterial);
+            rightHand.position.set(1.5, 1.2, 0);
+            
+            // Legs
+            const legGeometry = new THREE.CylinderGeometry(0.3, 0.4, 1, 8);
+            const leftLeg = new THREE.Mesh(legGeometry, bodyMaterial);
+            leftLeg.position.set(-0.4, 0.2, 0);
+            
+            const rightLeg = new THREE.Mesh(legGeometry, bodyMaterial);
+            rightLeg.position.set(0.4, 0.2, 0);
+            
+            // Feet
+            const footGeometry = new THREE.BoxGeometry(0.6, 0.2, 0.8);
+            const leftFoot = new THREE.Mesh(footGeometry, bodyMaterial);
+            leftFoot.position.set(-0.4, -0.4, 0.2);
+            
+            const rightFoot = new THREE.Mesh(footGeometry, bodyMaterial);
+            rightFoot.position.set(0.4, -0.4, 0.2);
+            
+            const group = new THREE.Group();
+            group.add(body);
+            group.add(head);
+            group.add(leftEye);
+            group.add(rightEye);
+            group.add(leftPupil);
+            group.add(rightPupil);
+            group.add(mouth);
+            group.add(spikes);
+            group.add(leftArm);
+            group.add(rightArm);
+            group.add(leftHand);
+            group.add(rightHand);
+            group.add(leftLeg);
+            group.add(rightLeg);
+            group.add(leftFoot);
+            group.add(rightFoot);
+            
+            group.position.set(0, 0, 0);
+            group.scale.set(1.2, 1.2, 1.2);
+            
+            // Store parts for animation
+            playerParts = {
+                body: body,
+                head: head,
+                leftArm: leftArm,
+                rightArm: rightArm,
+                leftLeg: leftLeg,
+                rightLeg: rightLeg,
+                spikes: spikes
+            };
+            
+            return group;
+        }
+        
+        function createSanic() {
+            // Body
+            const bodyGeometry = new THREE.SphereGeometry(0.9, 32, 32);
+            bodyGeometry.scale(1.5, 1, 1);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1E90FF,
+                roughness: 0.3,
+                metalness: 0.2
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1;
+            body.castShadow = true;
+            
+            // Eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.5, 1.2, 0.8);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.5, 1.2, 0.8);
+            
+            // Pupils
+            const pupilGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+            const pupilMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+            
+            const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            leftPupil.position.set(-0.5, 1.2, 1);
+            
+            const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            rightPupil.position.set(0.5, 1.2, 1);
+            
+            // Mouth
+            const mouthGeometry = new THREE.TorusGeometry(0.3, 0.05, 8, 16, Math.PI);
+            const mouthMaterial = new THREE.MeshStandardMaterial({ color: 0x8B0000 });
+            const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+            mouth.position.set(0, 0.8, 0.8);
+            mouth.rotation.x = Math.PI / 2;
+            
+            // Spikes
+            const spikeGeometry = new THREE.ConeGeometry(0.1, 0.6, 8);
+            const spikeMaterial = new THREE.MeshStandardMaterial({ color: 0x1E90FF });
+            
+            const spikes = new THREE.Group();
+            for (let i = 0; i < 7; i++) {
+                const spike = new THREE.Mesh(spikeGeometry, spikeMaterial);
+                spike.position.set(0, 1.5, -0.5);
+                spike.rotation.x = Math.PI / 4;
+                spike.rotation.z = (i / 7) * Math.PI * 2;
+                spikes.add(spike);
+            }
+            
+            // Arms
+            const armGeometry = new THREE.CylinderGeometry(0.15, 0.2, 1, 8);
+            const leftArm = new THREE.Mesh(armGeometry, bodyMaterial);
+            leftArm.position.set(-0.8, 1, 0);
+            leftArm.rotation.z = Math.PI / 4;
+            
+            const rightArm = new THREE.Mesh(armGeometry, bodyMaterial);
+            rightArm.position.set(0.8, 1, 0);
+            rightArm.rotation.z = -Math.PI / 4;
+            
+            // Hands
+            const handGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            const leftHand = new THREE.Mesh(handGeometry, bodyMaterial);
+            leftHand.position.set(-1.2, 0.8, 0);
+            
+            const rightHand = new THREE.Mesh(handGeometry, bodyMaterial);
+            rightHand.position.set(1.2, 0.8, 0);
+            
+            // Legs
+            const legGeometry = new THREE.CylinderGeometry(0.2, 0.3, 1.5, 8);
+            const leftLeg = new THREE.Mesh(legGeometry, bodyMaterial);
+            leftLeg.position.set(-0.4, -0.2, 0);
+            
+            const rightLeg = new THREE.Mesh(legGeometry, bodyMaterial);
+            rightLeg.position.set(0.4, -0.2, 0);
+            
+            // Feet
+            const footGeometry = new THREE.BoxGeometry(0.5, 0.2, 0.7);
+            const leftFoot = new THREE.Mesh(footGeometry, new THREE.MeshStandardMaterial({ color: 0xFF4500 }));
+            leftFoot.position.set(-0.4, -0.8, 0.2);
+            
+            const rightFoot = new THREE.Mesh(footGeometry, new THREE.MeshStandardMaterial({ color: 0xFF4500 }));
+            rightFoot.position.set(0.4, -0.8, 0.2);
+            
+            // White belly
+            const bellyGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            bellyGeometry.scale(1.3, 0.8, 1);
+            const belly = new THREE.Mesh(bellyGeometry, new THREE.MeshStandardMaterial({ color: 0xFFFFFF }));
+            belly.position.set(0, 0.8, 0.4);
+            
+            const group = new THREE.Group();
+            group.add(body);
+            group.add(belly);
+            group.add(leftEye);
+            group.add(rightEye);
+            group.add(leftPupil);
+            group.add(rightPupil);
+            group.add(mouth);
+            group.add(spikes);
+            group.add(leftArm);
+            group.add(rightArm);
+            group.add(leftHand);
+            group.add(rightHand);
+            group.add(leftLeg);
+            group.add(rightLeg);
+            group.add(leftFoot);
+            group.add(rightFoot);
+            
+            // Position Sanic randomly
+            group.position.set(
+                Math.random() * 40 - 20,
+                0,
+                Math.random() * 40 - 20
+            );
+            
+            // Store parts for animation
+            sanicParts = {
+                body: body,
+                spikes: spikes,
+                leftLeg: leftLeg,
+                rightLeg: rightLeg
+            };
+            
+            return group;
+        }
+        
+        // Obstacles and environment
+        function createObstacle(x, z, size) {
+            const geometry = new THREE.CylinderGeometry(size/2, size/2, 3, 8);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0x8B4513,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            const obstacle = new THREE.Mesh(geometry, material);
+            obstacle.position.set(x, 1.5, z);
+            obstacle.castShadow = true;
+            obstacle.receiveShadow = true;
+            
+            // Add grass on top
+            const topGeometry = new THREE.CylinderGeometry(size/2 + 0.1, size/2 + 0.1, 0.5, 8);
+            const topMaterial = new THREE.MeshStandardMaterial({ color: 0x3CB371 });
+            const top = new THREE.Mesh(topGeometry, topMaterial);
+            top.position.y = 2.75;
+            obstacle.add(top);
+            
+            return obstacle;
+        }
+        
+        function createRing(x, z) {
+            const ringGeometry = new THREE.TorusGeometry(0.5, 0.1, 8, 16);
+            const ringMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xFFD700,
+                metalness: 0.9,
+                roughness: 0.1,
+                emissive: 0xFFD700,
+                emissiveIntensity: 0.5
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.position.set(x, 2, z);
+            ring.rotation.x = Math.PI / 2;
+            ring.castShadow = true;
+            
+            return ring;
+        }
+        
+        // Game controls
+        const keys = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+            up: false,
+            left: false,
+            down: false,
+            right: false,
+            space: false
+        };
+        
+        document.addEventListener('keydown', (event) => {
+            switch(event.key.toLowerCase()) {
+                case 'w': keys.w = true; break;
+                case 'a': keys.a = true; break;
+                case 's': keys.s = true; break;
+                case 'd': keys.d = true; break;
+                case ' ': keys.space = true; break;
+            }
+            
+            switch(event.key) {
+                case 'ArrowUp': keys.up = true; break;
+                case 'ArrowLeft': keys.left = true; break;
+                case 'ArrowDown': keys.down = true; break;
+                case 'ArrowRight': keys.right = true; break;
+            }
+        });
+        
+        document.addEventListener('keyup', (event) => {
+            switch(event.key.toLowerCase()) {
+                case 'w': keys.w = false; break;
+                case 'a': keys.a = false; break;
+                case 's': keys.s = false; break;
+                case 'd': keys.d = false; break;
+                case ' ': keys.space = false; break;
+            }
+            
+            switch(event.key) {
+                case 'ArrowUp': keys.up = false; break;
+                case 'ArrowLeft': keys.left = false; break;
+                case 'ArrowDown': keys.down = false; break;
+                case 'ArrowRight': keys.right = false; break;
+            }
+        });
+        
+        // Character selection
+        function selectCharacter(character) {
+            selectedCharacter = character;
+            document.querySelectorAll('.character-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Set color based on selection
+            switch(character) {
+                case 'red': playerColor = 0xFF0000; break;
+                case 'blue': playerColor = 0x0000FF; break;
+                case 'green': playerColor = 0x00FF00; break;
+            }
+        }
+        
+        function startGame() {
+            document.getElementById('character-select').style.display = 'none';
+            document.getElementById('ui').style.display = 'block';
+            
+            // Update game title based on selection
+            let characterName = "Ugandan Knuckles";
+            if (selectedCharacter === 'blue') characterName = "Ugandan Knuckles(Blue)";
+            if (selectedCharacter === 'green') characterName = "Ugandan Knuckles(Green)";
+            document.getElementById('game-title').textContent = `${characterName} vs Sanic`;
+            
+            // Create characters with selected color
+            player = createPlayer(playerColor);
+            scene.add(player);
+            
+            sanic = createSanic();
+            scene.add(sanic);
+            
+            // Add obstacles
+            for (let i = 0; i < 15; i++) {
+                const size = Math.random() * 3 + 1;
+                const obstacle = createObstacle(
+                    Math.random() * 80 - 40,
+                    Math.random() * 80 - 40,
+                    size
+                );
+                scene.add(obstacle);
+            }
+            
+            // Add rings
+            for (let i = 0; i < 20; i++) {
+                const ring = createRing(
+                    Math.random() * 80 - 40,
+                    Math.random() * 80 - 40
+                );
+                scene.add(ring);
+            }
+            
+            // Start game loop
+            animate();
+        }
+        
+        // Game logic
+        function checkCollision(obj1, obj2, distance) {
+            const obj1Pos = obj1.position;
+            const obj2Pos = obj2.position;
+            return obj1Pos.distanceTo(obj2Pos) < distance;
+        }
+        
+        function moveSanic() {
+            let direction;
+            
+            if (Math.random() > 0.7) {
+                direction = new THREE.Vector3(
+                    Math.random() - 0.5,
+                    0,
+                    Math.random() - 0.5
+                ).normalize();
+            } else {
+                direction = new THREE.Vector3().subVectors(sanic.position, player.position).normalize();
+            }
+            
+            const speed = sanicHealth < 30 ? 0.08 : 0.05;
+            const newX = sanic.position.x + direction.x * speed;
+            const newZ = sanic.position.z + direction.z * speed;
+            
+            if (Math.abs(newX) < 45 && Math.abs(newZ) < 45) {
+                sanic.position.x = newX;
+                sanic.position.z = newZ;
+            }
+            
+            if (direction.x !== 0 || direction.z !== 0) {
+                sanic.rotation.y = Math.atan2(direction.x, direction.z);
+            }
+            
+            const legSpeed = 0.1;
+            sanicParts.leftLeg.rotation.x = Math.sin(Date.now() * legSpeed) * 0.5;
+            sanicParts.rightLeg.rotation.x = Math.sin(Date.now() * legSpeed + Math.PI) * 0.5;
+            sanic.position.y = Math.sin(Date.now() * 0.005) * 0.2;
+        }
+        
+        let attackStartTime = 0;
+        
+        function animatePlayerAttack() {
+            if (!isAttacking) return;
+            
+            const attackProgress = Date.now() - attackStartTime;
+            if (attackProgress < 100) {
+                playerParts.rightArm.rotation.z = -Math.PI / 4 - attackProgress / 200;
+            } else if (attackProgress < 200) {
+                playerParts.rightArm.rotation.z = -Math.PI / 4 + (attackProgress - 100) / 150;
+                
+                if (attackProgress > 150 && attackProgress < 180 && checkCollision(player, sanic, 3)) {
+                    sanicHealth -= 10;
+                    document.getElementById('sanic-health-bar').style.width = sanicHealth + '%';
+                    
+                    const direction = new THREE.Vector3().subVectors(sanic.position, player.position).normalize();
+                    sanic.position.x += direction.x * 2;
+                    sanic.position.z += direction.z * 2;
+                    
+                    sanic.children.forEach(child => {
+                        if (child.material && child.material.color) {
+                            child.material.color.setHex(0xFF0000);
+                            setTimeout(() => {
+                                if (child.material) {
+                                    if (child === sanicParts.body) {
+                                        child.material.color.setHex(0x1E90FF);
+                                    } else if (child.material.color.getHex() === 0xFF0000) {
+                                        child.material.color.setHex(0xFFFFFF);
+                                    }
+                                }
+                            }, 200);
+                        }
+                    });
+                }
+            } else if (attackProgress < 300) {
+                playerParts.rightArm.rotation.z = -Math.PI / 4;
+            } else {
+                isAttacking = false;
+                setTimeout(() => { attackCooldown = false; }, 500);
+            }
+        }
+        
+        function resetGame() {
+            // Clear scene
+            while(scene.children.length > 0){ 
+                scene.remove(scene.children[0]); 
+            }
+            
+            // Reset variables
+            score = 0;
+            startTime = Date.now();
+            gameActive = true;
+            knucklesHealth = 100;
+            sanicHealth = 100;
+            
+            // Rebuild scene
+            scene.add(ambientLight);
+            scene.add(directionalLight);
+            scene.add(ground);
+            
+            // Create new characters
+            player = createPlayer(playerColor);
+            scene.add(player);
+            
+            sanic = createSanic();
+            scene.add(sanic);
+            
+            // Add obstacles
+            for (let i = 0; i < 15; i++) {
+                const size = Math.random() * 3 + 1;
+                const obstacle = createObstacle(
+                    Math.random() * 80 - 40,
+                    Math.random() * 80 - 40,
+                    size
+                );
+                scene.add(obstacle);
+            }
+            
+            // Add rings
+            for (let i = 0; i < 20; i++) {
+                const ring = createRing(
+                    Math.random() * 80 - 40,
+                    Math.random() * 80 - 40
+                );
+                scene.add(ring);
+            }
+            
+            // Reset UI
+            document.getElementById('score').textContent = score;
+            document.getElementById('knuckles-health-bar').style.width = '100%';
+            document.getElementById('sanic-health-bar').style.width = '100%';
+            document.getElementById('game-over').style.display = 'none';
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (gameActive) {
+                gameTime = (Date.now() - startTime) / 1000;
+                document.getElementById('time').textContent = gameTime.toFixed(1);
+                
+                // Player movement
+                const moveSpeed = 0.12;
+                const rotationSpeed = 0.08;
+                
+                const moveForward = keys.w || keys.up;
+                const moveBackward = keys.s || keys.down;
+                const turnLeft = keys.a || keys.left;
+                const turnRight = keys.d || keys.right;
+                
+                if (moveForward) {
+                    player.position.x -= Math.sin(player.rotation.y) * moveSpeed;
+                    player.position.z -= Math.cos(player.rotation.y) * moveSpeed;
+                    playerParts.leftLeg.rotation.x = Math.sin(Date.now() * 0.01) * 0.5;
+                    playerParts.rightLeg.rotation.x = Math.sin(Date.now() * 0.01 + Math.PI) * 0.5;
+                }
+                if (moveBackward) {
+                    player.position.x += Math.sin(player.rotation.y) * moveSpeed;
+                    player.position.z += Math.cos(player.rotation.y) * moveSpeed;
+                }
+                if (turnLeft) {
+                    player.rotation.y += rotationSpeed;
+                }
+                if (turnRight) {
+                    player.rotation.y -= rotationSpeed;
+                }
+                
+                if (keys.space && !isAttacking && !attackCooldown) {
+                    isAttacking = true;
+                    attackCooldown = true;
+                    attackStartTime = Date.now();
+                }
+                
+                animatePlayerAttack();
+                
+                player.position.x = Math.max(-45, Math.min(45, player.position.x));
+                player.position.z = Math.max(-45, Math.min(45, player.position.z));
+                
+                moveSanic();
+                
+                if (checkCollision(player, sanic, 2) && !isAttacking) {
+                    knucklesHealth -= 1;
+                    document.getElementById('knuckles-health-bar').style.width = knucklesHealth + '%';
+                    
+                    player.children.forEach(child => {
+                        if (child.material && child.material.color) {
+                            child.material.color.setHex(0xAA0000);
+                            setTimeout(() => {
+                                if (child.material) {
+                                    child.material.color.setHex(playerColor);
+                                }
+                            }, 200);
+                        }
+                    });
+                }
+                
+                if (sanicHealth <= 0) {
+                    score++;
+                    document.getElementById('score').textContent = score;
+                    
+                    if (gameTime > bestTime) {
+                        bestTime = gameTime;
+                        document.getElementById('best-time').textContent = bestTime.toFixed(1);
+                    }
+                    
+                    sanicHealth = 100;
+                    document.getElementById('sanic-health-bar').style.width = '100%';
+                    sanic.position.set(
+                        Math.random() * 40 - 20,
+                        0,
+                        Math.random() * 40 - 20
+                    );
+                    
+                    startTime = Date.now();
+                }
+                
+                if (knucklesHealth <= 0) {
+                    gameActive = false;
+                    document.getElementById('final-score').textContent = score;
+                    document.getElementById('game-over').style.display = 'block';
+                }
+                
+                // Camera follow
+                const targetCameraPos = new THREE.Vector3(
+                    player.position.x,
+                    15,
+                    player.position.z + 20
+                );
+                
+                camera.position.lerp(targetCameraPos, 0.1);
+                camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
+                
+                sanicParts.spikes.rotation.y += 0.1;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
